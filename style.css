@@ -447,3 +447,15 @@ img,svg{max-width:100%; display:block;}
   .area-block{grid-template-columns:70px 1fr;}
   .footer-grid{grid-template-columns:1fr;}
 }
+
+/* ---------- 運営者情報ページ ---------- */
+.op-card{
+  max-width:640px;
+  margin:0 auto;
+  background:var(--accent-blue-deep);
+  color:#EAF4FA;
+  border-radius:18px;
+  padding:32px 28px;
+}
+.op-card h1{color:#fff; font-size:1.3rem; margin-bottom:16px;}
+.op-card a{color:#EAF4FA;}
