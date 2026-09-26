@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://leben-k.github.io/maniwa/map.html">
+<title>観光マップ（位置関係の模式図）｜まにわ往来 - 岡山県真庭市 観光情報サイト</title>
+<meta name="description" content="南北に長い岡山県真庭市の観光地・祭りの会場の位置関係を、高速道路・鉄道・川とあわせて一枚の模式図にまとめました。蒜山高原、湯原温泉、勝山、神庭の滝、醍醐桜、北房などの移動時間の目安も掲載しています。">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ---------- 観光マップページ専用 ---------- */
+.map-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  gap:32px;
+  align-items:start;
+}
+.map-panel{
+  position:sticky;
+  top:96px;
+  background:#fff;
+  border:1px solid var(--border-soft);
+  border-radius:18px;
+  padding:14px;
+}
+.map-panel svg{width:100%; height:auto; max-height:calc(100vh - 200px); margin:0 auto; display:block;}
+.map-filter{display:flex; flex-wrap:wrap; gap:6px; margin:0 0 8px;}
+.map-filter button{
+  font:inherit; font-size:0.82rem; font-weight:700;
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 12px; border-radius:999px;
+  border:1.5px solid var(--border-soft); background:#fff; color:var(--text-main);
+  cursor:pointer;
+}
+.map-filter button[aria-pressed="true"]{border-color:var(--accent-blue-deep); background:var(--bg-base);}
+.map-filter button[aria-pressed="false"]{opacity:0.5;}
+.map-filter .sw{width:11px; height:11px; border-radius:50%; display:inline-block;}
+
+.map-legend{
+  display:flex; flex-wrap:wrap; gap:4px 16px;
+  font-size:0.75rem; color:var(--text-sub);
+  margin-top:8px; padding-top:8px; border-top:1px solid var(--border-soft);
+}
+.map-legend span{display:inline-flex; align-items:center; gap:6px;}
+.lg-exp{width:22px; height:4px; background:#2E8B57; border-radius:2px;}
+.lg-rail{width:22px; height:4px; background:repeating-linear-gradient(90deg,#465563 0 5px,#fff 5px 8px); border:1px solid #465563; border-radius:2px;}
+.lg-river{width:22px; height:4px; background:#7FB4D6; border-radius:2px;}
+.lg-border{width:22px; height:0; border-top:2px dashed #204A67;}
+
+/* SVG text & pins */
+#maniwa-map text{font-family:'Noto Sans JP',sans-serif;}
+#maniwa-map .t-area{font-family:'Zen Maru Gothic',sans-serif; font-weight:900; font-size:21px; fill:#204A67; opacity:0.78; letter-spacing:0.08em;}
+#maniwa-map .t-road{font-size:10.5px; font-weight:700; fill:#2E7050;}
+#maniwa-map .t-rail{font-size:10.5px; font-weight:700; fill:#465563;}
+#maniwa-map .t-river{font-size:10.5px; fill:#3F7EA6; font-weight:500;}
+#maniwa-map .t-ic{font-size:10.5px; font-weight:700; fill:#16202A; paint-order:stroke; stroke:#fff; stroke-width:3px;}
+#maniwa-map .t-sta{font-size:10px; fill:#465563; paint-order:stroke; stroke:#fff; stroke-width:3px;}
+#maniwa-map .t-out{font-size:11.5px; fill:#465563; font-weight:500; paint-order:stroke; stroke:#EEF4F8; stroke-width:4px;}
+.pin{cursor:pointer; outline:none;}
+.pin-halo{fill:#fff; opacity:0; transition:opacity .15s;}
+.pin-dot{stroke:#fff; stroke-width:2.5;}
+.pin-num{font-size:12.5px; font-weight:700; fill:#fff; pointer-events:none;}
+.pin:hover .pin-halo, .pin:focus-visible .pin-halo{opacity:0.9;}
+.pin:focus-visible .pin-dot{stroke:#16202A;}
+.pin.is-active .pin-halo{opacity:1; fill:#16202A;}
+.pin.is-dim{opacity:0.18; pointer-events:none;}
+.area-zone{transition:opacity .2s;}
+.area-zone.is-active{stroke:#204A67; stroke-width:2;}
+
+.cat-nature{fill:#3E8E5E; background:#3E8E5E;}
+.cat-onsen{fill:#2F6690; background:#2F6690;}
+.cat-town{fill:#B14C5D; background:#B14C5D;}
+.cat-event{fill:#C1892E; background:#C1892E;}
+
+/* detail card */
+.spot-detail{
+  background:#fff;
+  border:1px solid var(--border-soft);
+  border-left:6px solid var(--accent-blue);
+  border-radius:14px;
+  padding:20px 22px;
+  margin-bottom:28px;
+  min-height:170px;
+}
+.spot-detail .d-area{font-size:0.82rem; font-weight:700; color:var(--accent-blue-deep);}
+.spot-detail h3{font-size:1.25rem; margin:2px 0 6px;}
+.spot-detail .d-cats{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;}
+.spot-detail .d-cats span{font-size:0.72rem; color:#fff; font-weight:700; padding:2px 10px; border-radius:999px;}
+.spot-detail p{color:var(--text-sub); font-size:0.94rem; margin-bottom:10px;}
+.spot-detail .d-access{font-size:0.88rem; background:var(--bg-base); border-radius:10px; padding:8px 12px; margin-bottom:12px;}
+.spot-detail .d-links{display:flex; flex-wrap:wrap; gap:8px 14px; font-size:0.88rem; font-weight:700;}
+.spot-detail .d-links a{text-decoration:underline; text-underline-offset:3px;}
+.spot-detail.is-empty{border-left-color:var(--accent-gold); display:flex; align-items:center;}
+.spot-detail.is-empty p{margin:0;}
+
+/* list */
+.area-group{margin-bottom:14px;}
+.area-group-name{font-size:0.95rem; margin:0 0 4px; color:var(--accent-blue-deep);}
+.area-group ul{list-style:none; margin:0; padding:0;}
+.spot-btn{
+  font:inherit; width:100%; text-align:left;
+  display:flex; align-items:center; gap:10px;
+  padding:7px 10px; border:0; border-radius:10px;
+  background:transparent; color:var(--text-main); cursor:pointer;
+}
+.spot-btn:hover{background:rgba(47,102,144,0.08);}
+.spot-btn:focus-visible{outline:2px solid var(--accent-blue-deep); outline-offset:1px;}
+.spot-btn.is-active{background:var(--accent-blue-deep); color:#fff;}
+.spot-btn.is-dim{opacity:0.35;}
+.spot-btn .num{
+  flex-shrink:0; width:24px; height:24px; border-radius:50%;
+  color:#fff; font-size:0.78rem; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.spot-btn .spot-name{font-size:0.93rem; font-weight:500;}
+
+/* route (travel-time) diagram */
+.route{position:relative; margin:0; padding:0; list-style:none; max-width:720px;}
+.route > li{position:relative; padding:0 0 0 46px;}
+.route > li::before{
+  content:""; position:absolute; left:15px; top:6px; bottom:-6px;
+  width:6px; background:#2E8B57; border-radius:3px;
+}
+.route > li:last-child::before{display:none;}
+.route .stop{position:relative; padding:0 0 4px;}
+.route .stop::before{
+  content:""; position:absolute; left:-40px; top:4px;
+  width:22px; height:22px; border-radius:50%;
+  background:#fff; border:4px solid #204A67;
+}
+.route .stop h3{font-size:1.1rem; margin:0; display:inline;}
+.route .stop .ic{font-size:0.8rem; color:var(--text-sub); margin-left:8px;}
+.route .stop .near{font-size:0.86rem; color:var(--text-sub); margin:2px 0 0;}
+.route .leg{
+  display:inline-block; margin:10px 0 16px;
+  font-size:0.84rem; font-weight:700; color:#2E7050;
+  background:#E3F2E8; border-radius:999px; padding:3px 12px;
+}
+.route .branch{
+  margin:8px 0 4px; padding:8px 12px;
+  border-left:3px dotted var(--accent-plum);
+  font-size:0.86rem; color:var(--text-sub); background:rgba(255,255,255,0.6); border-radius:0 10px 10px 0;
+}
+.route .branch strong{color:var(--text-main);}
+
+.access-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px;}
+.access-item{border-top:3px solid var(--accent-blue-deep); padding-top:12px;}
+.access-item h3{font-size:1rem; margin-bottom:4px;}
+.access-item p{font-size:0.9rem; color:var(--text-sub); margin:0;}
+.note-small{font-size:0.8rem; color:var(--text-sub); margin-top:18px;}
+
+@media (max-width:860px){
+  .map-layout{grid-template-columns:1fr;}
+  .map-panel{position:static; padding:10px 8px;}
+  .map-panel svg{max-height:none;}
+}
+@media (prefers-reduced-motion:reduce){
+  .pin-halo, .area-zone{transition:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#E8F4FA"/><circle cx="46" cy="18" r="8" fill="#C1892E"/><path d="M4 50 L20 26 L28 38 L36 20 L60 50 Z" fill="#2F6690"/><path d="M4 50 L20 26 L28 38 L22 50 Z" fill="#204A67"/><path d="M36 20 L46 34 L52 30 L60 50 L36 50 Z" fill="#3E7CA6"/></svg>
+      <span>まにわ往来<span class="brand-sub">岡山県真庭市 観光情報サイト（非公式）</span></span>
+    </div>
+    <nav class="main-nav">
+      <a href="index.html">トップ</a>
+      <a href="map.html" class="active">観光マップ</a>
+      <a href="matsuri.html">祭り・行事</a>
+      <a href="areas.html">地区紹介</a>
+      <a href="shukuhaku.html">宿泊施設</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" style="padding:36px 0 16px;">
+  <div class="wrap" style="grid-template-columns:1fr;">
+    <div class="hero-copy">
+      <span class="eyebrow">南北およそ50km、北の高原から南の鍾乳洞まで</span>
+      <h1>どこが、どこの隣？<br>一枚でわかる、真庭。</h1>
+      <p>真庭市は南北に細長く、観光地が市内のあちこちに散らばっています。地図の番号をタップすると、スポットの説明と行き方が表示されます。</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px;">
+  <div class="wrap">
+    <div class="map-layout">
+      <div class="map-panel">
+        <div class="map-filter" role="group" aria-label="表示するスポットの種類">
+          <button type="button" data-filter="nature" aria-pressed="true"><span class="sw cat-nature"></span>自然・景勝</button>
+          <button type="button" data-filter="onsen" aria-pressed="true"><span class="sw cat-onsen"></span>温泉</button>
+          <button type="button" data-filter="town" aria-pressed="true"><span class="sw cat-town"></span>町並み・歴史</button>
+          <button type="button" data-filter="event" aria-pressed="true"><span class="sw cat-event"></span>祭り・行事</button>
+        </div>
+<svg id="maniwa-map" viewBox="60 30 520 725" role="group" aria-labelledby="map-title map-desc" xmlns="http://www.w3.org/2000/svg">
+<title id="map-title">真庭市 観光スポット位置関係の模式図</title>
+<desc id="map-desc">北に蒜山高原、その南に湯原温泉、中央に勝山・久世・美甘、南に落合と北房が並ぶ。米子自動車道が南北に、中国自動車道が南部を東西に通る。</desc>
+<defs><clipPath id="city-clip"><path d="M167.1 61.1 C188.3 51.0 228.6 47.5 259.4 49.9 C290.2 52.2 323.0 67.5 351.9 75.2 C380.8 83.0 413.4 78.8 432.7 96.4 C451.9 114.0 465.5 149.2 467.4 180.9 C469.3 212.6 444.3 251.4 444.3 286.6 C444.3 321.8 458.8 359.3 467.4 392.2 C476.0 425.1 486.6 458.0 496.2 483.8 C505.8 509.6 527.0 524.9 525.1 547.2 C523.2 569.5 502.0 596.6 484.7 617.7 C467.4 638.8 443.3 657.1 421.2 674.0 C399.1 690.9 375.0 708.5 351.9 719.1 C328.8 729.7 308.6 739.1 282.6 737.5 C256.6 735.9 217.1 723.4 195.9 709.3 C174.7 695.2 164.2 677.6 155.5 652.9 C146.8 628.2 144.0 590.6 144.0 561.3 C144.0 531.9 157.4 499.1 155.5 476.8 C153.6 454.5 129.5 445.1 132.4 427.5 C135.3 409.9 159.3 392.2 172.8 371.1 C186.3 350.0 212.3 323.0 213.3 300.7 C214.3 278.4 192.1 257.3 178.6 237.3 C165.1 217.3 140.1 202.1 132.4 180.9 C124.7 159.8 126.6 130.4 132.4 110.4 C138.2 90.4 145.9 71.2 167.1 61.1 Z"/></clipPath><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="8" stroke="#D3E0E8" stroke-width="2"/></pattern></defs>
+<rect x="60" y="30" width="520" height="725" fill="#EEF4F8"/>
+<rect x="60" y="30" width="520" height="725" fill="url(#hatch)"/>
+<path d="M167.1 61.1 C188.3 51.0 228.6 47.5 259.4 49.9 C290.2 52.2 323.0 67.5 351.9 75.2 C380.8 83.0 413.4 78.8 432.7 96.4 C451.9 114.0 465.5 149.2 467.4 180.9 C469.3 212.6 444.3 251.4 444.3 286.6 C444.3 321.8 458.8 359.3 467.4 392.2 C476.0 425.1 486.6 458.0 496.2 483.8 C505.8 509.6 527.0 524.9 525.1 547.2 C523.2 569.5 502.0 596.6 484.7 617.7 C467.4 638.8 443.3 657.1 421.2 674.0 C399.1 690.9 375.0 708.5 351.9 719.1 C328.8 729.7 308.6 739.1 282.6 737.5 C256.6 735.9 217.1 723.4 195.9 709.3 C174.7 695.2 164.2 677.6 155.5 652.9 C146.8 628.2 144.0 590.6 144.0 561.3 C144.0 531.9 157.4 499.1 155.5 476.8 C153.6 454.5 129.5 445.1 132.4 427.5 C135.3 409.9 159.3 392.2 172.8 371.1 C186.3 350.0 212.3 323.0 213.3 300.7 C214.3 278.4 192.1 257.3 178.6 237.3 C165.1 217.3 140.1 202.1 132.4 180.9 C124.7 159.8 126.6 130.4 132.4 110.4 C138.2 90.4 145.9 71.2 167.1 61.1 Z" fill="#FBFDFE"/>
+<g clip-path="url(#city-clip)">
+<ellipse class="area-zone" data-area="蒜山" cx="288.3" cy="145.7" rx="170" ry="62" fill="#DDEFD8"/>
+<ellipse class="area-zone" data-area="湯原" cx="369.2" cy="293.6" rx="78" ry="70" fill="#D6EAF6"/>
+<ellipse class="area-zone" data-area="美甘" cx="195.9" cy="406.3" rx="58" ry="48" fill="#F7EACB"/>
+<ellipse class="area-zone" data-area="勝山" cx="282.6" cy="462.7" rx="66" ry="40" fill="#E6DDF3"/>
+<ellipse class="area-zone" data-area="久世" cx="421.2" cy="469.7" rx="52" ry="40" fill="#F7EACB"/>
+<ellipse class="area-zone" data-area="落合" cx="346.1" cy="568.4" rx="150" ry="50" fill="#F8DCDC"/>
+<ellipse class="area-zone" data-area="北房" cx="271.0" cy="667.0" rx="98" ry="42" fill="#E6DDF3"/>
+</g>
+<path d="M167.1 61.1 C188.3 51.0 228.6 47.5 259.4 49.9 C290.2 52.2 323.0 67.5 351.9 75.2 C380.8 83.0 413.4 78.8 432.7 96.4 C451.9 114.0 465.5 149.2 467.4 180.9 C469.3 212.6 444.3 251.4 444.3 286.6 C444.3 321.8 458.8 359.3 467.4 392.2 C476.0 425.1 486.6 458.0 496.2 483.8 C505.8 509.6 527.0 524.9 525.1 547.2 C523.2 569.5 502.0 596.6 484.7 617.7 C467.4 638.8 443.3 657.1 421.2 674.0 C399.1 690.9 375.0 708.5 351.9 719.1 C328.8 729.7 308.6 739.1 282.6 737.5 C256.6 735.9 217.1 723.4 195.9 709.3 C174.7 695.2 164.2 677.6 155.5 652.9 C146.8 628.2 144.0 590.6 144.0 561.3 C144.0 531.9 157.4 499.1 155.5 476.8 C153.6 454.5 129.5 445.1 132.4 427.5 C135.3 409.9 159.3 392.2 172.8 371.1 C186.3 350.0 212.3 323.0 213.3 300.7 C214.3 278.4 192.1 257.3 178.6 237.3 C165.1 217.3 140.1 202.1 132.4 180.9 C124.7 159.8 126.6 130.4 132.4 110.4 C138.2 90.4 145.9 71.2 167.1 61.1 Z" fill="none" stroke="#204A67" stroke-width="2.2" stroke-dasharray="7 4"/>
+<path d="M195.9 117.5 C204.6 121.0 227.7 129.2 247.9 138.6 C268.1 148.0 298.9 158.6 317.2 173.9 C335.5 189.2 349.9 213.8 357.6 230.2 C365.3 246.6 364.8 258.4 363.4 272.5 C362.0 286.6 353.0 297.2 349.5 314.8 C346.0 332.4 346.1 357.1 342.6 378.2 C339.2 399.3 332.7 425.6 328.8 441.6 C324.9 457.6 317.2 465.8 319.5 474.0 C321.8 482.2 332.4 486.7 342.6 490.9 C352.8 495.1 373.8 493.4 380.7 499.3 C387.6 505.2 384.8 517.2 384.2 526.1 C383.6 535.0 375.4 537.6 377.3 552.9 C379.2 568.2 389.4 592.8 395.7 617.7 C402.0 642.6 410.2 682.2 415.4 702.2 C420.6 722.2 425.0 731.6 426.9 737.5" fill="none" stroke="#7FB4D6" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M161.3 681.1 C173.8 674.0 214.7 648.9 236.4 638.8 C258.1 628.7 275.4 628.2 291.8 620.5 C308.2 612.8 320.2 603.6 334.5 592.3 C348.8 581.0 370.2 559.5 377.3 552.9" fill="none" stroke="#7FB4D6" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M138.2 371.1 C148.8 378.2 181.5 400.9 201.7 413.4 C221.9 425.8 239.8 435.7 259.4 445.8 C279.0 455.9 309.5 469.3 319.5 474.0" fill="none" stroke="#7FB4D6" stroke-width="3" stroke-linecap="round"/>
+<ellipse cx="366.9" cy="258.4" rx="9" ry="18" fill="#9CC6E0" transform="rotate(-25 366.9 258.4)"/>
+<path d="M548.2 519.1 C521.2 522.4 414.0 541.9 386.5 538.8 C359.0 535.7 393.6 510.3 383.0 500.7 C372.4 491.1 344.4 477.9 323.0 481.0 C301.6 484.1 282.7 506.2 254.8 519.1 C226.9 532.0 172.1 551.9 155.5 558.5" fill="none" stroke="#465563" stroke-width="3.4" stroke-linecap="round"/>
+<path d="M548.2 519.1 C521.2 522.4 414.0 541.9 386.5 538.8 C359.0 535.7 393.6 510.3 383.0 500.7 C372.4 491.1 344.4 477.9 323.0 481.0 C301.6 484.1 282.7 506.2 254.8 519.1 C226.9 532.0 172.1 551.9 155.5 558.5" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="6 6"/>
+<path d="M384.2 554.3 C388.1 542.5 404.6 510.8 407.3 483.8 C410.0 456.8 404.2 422.5 400.4 392.2 C396.5 361.9 395.2 329.8 384.2 302.1 C373.2 274.4 348.0 246.2 334.5 226.0 C321.0 205.8 310.4 199.0 303.3 180.9 C296.2 162.8 293.0 139.8 291.8 117.5 C290.6 95.2 295.6 58.8 296.4 47.0" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+<path d="M384.2 554.3 C388.1 542.5 404.6 510.8 407.3 483.8 C410.0 456.8 404.2 422.5 400.4 392.2 C396.5 361.9 395.2 329.8 384.2 302.1 C373.2 274.4 348.0 246.2 334.5 226.0 C321.0 205.8 310.4 199.0 303.3 180.9 C296.2 162.8 293.0 139.8 291.8 117.5 C290.6 95.2 295.6 58.8 296.4 47.0" fill="none" stroke="#2E8B57" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M548.2 505.0 C528.0 510.6 454.2 530.6 426.9 538.8 C399.6 547.0 401.7 544.0 384.2 554.3 C366.7 564.6 338.4 589.3 321.8 600.8 C305.2 612.3 304.9 615.3 284.9 623.3 C264.9 631.3 228.1 641.4 201.7 648.7 C175.3 656.0 139.1 664.0 126.6 667.0" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+<path d="M548.2 505.0 C528.0 510.6 454.2 530.6 426.9 538.8 C399.6 547.0 401.7 544.0 384.2 554.3 C366.7 564.6 338.4 589.3 321.8 600.8 C305.2 612.3 304.9 615.3 284.9 623.3 C264.9 631.3 228.1 641.4 201.7 648.7 C175.3 656.0 139.1 664.0 126.6 667.0" fill="none" stroke="#2E8B57" stroke-width="4.5" stroke-linecap="round"/>
+<path d="M321.8 600.8 C325.3 610.7 336.1 637.2 342.6 660.0 C349.2 682.8 358.0 724.6 361.1 737.5" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+<path d="M321.8 600.8 C325.3 610.7 336.1 637.2 342.6 660.0 C349.2 682.8 358.0 724.6 361.1 737.5" fill="none" stroke="#2E8B57" stroke-width="4.5" stroke-linecap="round"/>
+<text x="411.7" y="357.0" class="t-road" text-anchor="start" transform="rotate(90 411.7 357.0)">米子自動車道</text>
+<text x="502.0" y="502.6" class="t-road" text-anchor="middle" transform="rotate(-22 502.0 502.6)">中国自動車道</text>
+<text x="358.5" y="681.1" class="t-road" text-anchor="start" transform="rotate(72 358.5 681.1)">岡山自動車道</text>
+<text x="184.4" y="563.2" class="t-rail" text-anchor="middle" transform="rotate(18 184.4 563.2)">JR姫新線</text>
+<text x="334.6" y="378.2" class="t-river" text-anchor="end">旭川</text>
+<text x="201.7" y="659.9" class="t-river" text-anchor="middle" transform="rotate(20 201.7 659.9)">備中川</text>
+<text x="167.1" y="387.1" class="t-river" text-anchor="middle" transform="rotate(30 167.1 387.1)">新庄川</text>
+<text x="342.2" y="255.3" class="t-river" text-anchor="end">湯原湖</text>
+<text x="195.9" y="117.5" class="t-area" text-anchor="middle">蒜山</text>
+<text x="426.9" y="251.3" class="t-area" text-anchor="middle">湯原</text>
+<text x="195.9" y="364.1" class="t-area" text-anchor="middle">美甘</text>
+<text x="282.6" y="420.4" class="t-area" text-anchor="middle">勝山</text>
+<text x="444.3" y="434.5" class="t-area" text-anchor="middle">久世</text>
+<text x="467.4" y="575.4" class="t-area" text-anchor="middle">落合</text>
+<text x="213.3" y="705.0" class="t-area" text-anchor="middle">北房</text>
+<rect x="298.3" y="175.9" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="313.3" y="184.9" class="t-ic" text-anchor="start">蒜山IC</text>
+<rect x="379.2" y="297.1" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="394.2" y="306.1" class="t-ic" text-anchor="start">湯原IC</text>
+<rect x="402.3" y="478.8" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="417.3" y="487.8" class="t-ic" text-anchor="start">久世IC</text>
+<rect x="379.2" y="549.3" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="378.2" y="572.3" class="t-ic" text-anchor="end">落合JCT</text>
+<rect x="421.9" y="533.8" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="426.9" y="557.8" class="t-ic" text-anchor="middle">落合IC</text>
+<rect x="279.9" y="618.3" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="274.9" y="627.3" class="t-ic" text-anchor="end">北房IC</text>
+<rect x="316.8" y="595.8" width="10" height="10" rx="2" fill="#fff" stroke="#2E8B57" stroke-width="2.4"/>
+<text x="331.8" y="604.8" class="t-ic" text-anchor="start">北房JCT</text>
+<circle cx="386.5" cy="538.8" r="4.5" fill="#fff" stroke="#465563" stroke-width="2.2"/>
+<text x="383.5" y="529.8" class="t-sta" text-anchor="start">美作落合駅</text>
+<circle cx="383.0" cy="500.7" r="4.5" fill="#fff" stroke="#465563" stroke-width="2.2"/>
+<text x="378.0" y="492.7" class="t-sta" text-anchor="end">久世駅</text>
+<circle cx="323.0" cy="481.0" r="4.5" fill="#fff" stroke="#465563" stroke-width="2.2"/>
+<text x="307.0" y="496.0" class="t-sta" text-anchor="end">中国勝山駅</text>
+<circle cx="254.8" cy="519.1" r="4.5" fill="#fff" stroke="#465563" stroke-width="2.2"/>
+<text x="245.8" y="523.1" class="t-sta" text-anchor="end">月田駅</text>
+<text x="320" y="46" class="t-out" text-anchor="middle">↑ 鳥取県（大山・米子方面）</text>
+<text x="320" y="748" class="t-out" text-anchor="middle">↓ 岡山市方面</text>
+<text x="70" y="590" class="t-out" text-anchor="start">← 新見市</text>
+<text x="574" y="440" class="t-out" text-anchor="end">津山市 →</text>
+<text x="134.2" y="328.8" class="t-out" text-anchor="middle">新庄村</text>
+<g transform="translate(544 112)"><circle r="17" fill="#fff" stroke="#204A67" stroke-width="1.5"/><path d="M0 -12 L5 4 L0 1 L-5 4 Z" fill="#B14C5D"/><text y="-22" class="t-ic" text-anchor="middle">北</text></g>
+<g transform="translate(450 712)"><path d="M0 0 H126.9" stroke="#204A67" stroke-width="3"/><path d="M0 -5 V5 M126.9 -5 V5" stroke="#204A67" stroke-width="2"/><text x="63.5" y="-8" class="t-ic" text-anchor="middle">約10km</text></g>
+<g id="pins">
+<g class="pin" data-id="1" data-cat="nature" transform="translate(288.3 159.8)" tabindex="0" role="button" aria-label="1. 蒜山高原・蒜山三座（蒜山）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-nature" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">1</text></g>
+<g class="pin" data-id="2" data-cat="onsen" transform="translate(351.9 310.5)" tabindex="0" role="button" aria-label="2. 湯原温泉「砂湯」（湯原）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-onsen" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">2</text></g>
+<g class="pin" data-id="3" data-cat="town nature" transform="translate(213.3 427.5)" tabindex="0" role="button" aria-label="3. 美甘の宿場町・美甘渓谷（美甘）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-town" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">3</text></g>
+<g class="pin" data-id="4" data-cat="nature" transform="translate(325.3 448.6)" tabindex="0" role="button" aria-label="4. 神庭の滝（勝山）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-nature" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">4</text></g>
+<g class="pin" data-id="5" data-cat="town event" transform="translate(317.2 479.6)" tabindex="0" role="button" aria-label="5. 勝山町並み保存地区（勝山）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-town" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">5</text></g>
+<g class="pin" data-id="6" data-cat="town event" transform="translate(388.8 499.3)" tabindex="0" role="button" aria-label="6. 旧遷喬尋常小学校・久世商店街（久世）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-town" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">6</text></g>
+<g class="pin" data-id="7" data-cat="town" transform="translate(363.4 547.2)" tabindex="0" role="button" aria-label="7. 落合（高瀬舟の町）（落合）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-town" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">7</text></g>
+<g class="pin" data-id="8" data-cat="nature event" transform="translate(245.6 578.2)" tabindex="0" role="button" aria-label="8. 醍醐桜（落合）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-nature" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">8</text></g>
+<g class="pin" data-id="9" data-cat="nature event" transform="translate(311.4 638.8)" tabindex="0" role="button" aria-label="9. 北房ホタルの里（北房）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-nature" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">9</text></g>
+<g class="pin" data-id="10" data-cat="event" transform="translate(265.2 651.5)" tabindex="0" role="button" aria-label="10. 呰部商店街（北房ぶり市）（北房）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-event" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">10</text></g>
+<g class="pin" data-id="11" data-cat="nature" transform="translate(230.6 676.9)" tabindex="0" role="button" aria-label="11. 備中鐘乳穴（北房）"><circle class="pin-halo" r="18"/><circle class="pin-dot cat-nature" r="12.5"/><text class="pin-num" y="4.6" text-anchor="middle">11</text></g>
+</g></svg>
+        <div class="map-legend" aria-hidden="true">
+          <span><i class="lg-exp"></i>高速道路（□＝IC）</span>
+          <span><i class="lg-rail"></i>JR姫新線（○＝駅）</span>
+          <span><i class="lg-river"></i>川</span>
+          <span><i class="lg-border"></i>市の境界（イメージ）</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="spot-detail is-empty" id="spot-detail" aria-live="polite">
+          <p>地図の番号か、下の一覧からスポットを選んでください。行き方の目安と、関連ページへのリンクが表示されます。</p>
+        </div>
+        <div class="section-head" style="margin-bottom:14px;">
+          <span class="tag">Spots</span>
+          <h2>北から南へ、主なスポット</h2>
+        </div>
+        <div id="spot-list">
+          <div class="area-group"><h3 class="area-group-name">蒜山</h3><ul><li><button type="button" class="spot-btn" data-id="1" data-cat="nature"><span class="num cat-nature">1</span><span class="spot-name">蒜山高原・蒜山三座</span></button></li></ul></div>
+          <div class="area-group"><h3 class="area-group-name">湯原</h3><ul><li><button type="button" class="spot-btn" data-id="2" data-cat="onsen"><span class="num cat-onsen">2</span><span class="spot-name">湯原温泉「砂湯」</span></button></li></ul></div>
+          <div class="area-group"><h3 class="area-group-name">美甘</h3><ul><li><button type="button" class="spot-btn" data-id="3" data-cat="town nature"><span class="num cat-town">3</span><span class="spot-name">美甘の宿場町・美甘渓谷</span></button></li></ul></div>
+          <div class="area-group"><h3 class="area-group-name">勝山</h3><ul><li><button type="button" class="spot-btn" data-id="4" data-cat="nature"><span class="num cat-nature">4</span><span class="spot-name">神庭の滝</span></button></li><li><button type="button" class="spot-btn" data-id="5" data-cat="town event"><span class="num cat-town">5</span><span class="spot-name">勝山町並み保存地区</span></button></li></ul></div>
+          <div class="area-group"><h3 class="area-group-name">久世</h3><ul><li><button type="button" class="spot-btn" data-id="6" data-cat="town event"><span class="num cat-town">6</span><span class="spot-name">旧遷喬尋常小学校・久世商店街</span></button></li></ul></div>
+          <div class="area-group"><h3 class="area-group-name">落合</h3><ul><li><button type="button" class="spot-btn" data-id="7" data-cat="town"><span class="num cat-town">7</span><span class="spot-name">落合（高瀬舟の町）</span></button></li><li><button type="button" class="spot-btn" data-id="8" data-cat="nature event"><span class="num cat-nature">8</span><span class="spot-name">醍醐桜</span></button></li></ul></div>
+          <div class="area-group"><h3 class="area-group-name">北房</h3><ul><li><button type="button" class="spot-btn" data-id="9" data-cat="nature event"><span class="num cat-nature">9</span><span class="spot-name">北房ホタルの里</span></button></li><li><button type="button" class="spot-btn" data-id="10" data-cat="event"><span class="num cat-event">10</span><span class="spot-name">呰部商店街（北房ぶり市）</span></button></li><li><button type="button" class="spot-btn" data-id="11" data-cat="nature"><span class="num cat-nature">11</span><span class="spot-name">備中鐘乳穴</span></button></li></ul></div>
+        </div>
+        <p class="note-small">※この地図は位置関係をつかむための模式図です。距離や形は正確ではありません。実際の移動には各スポット名の「Googleマップで開く」をご利用ください。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section alt-green">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Travel Time</span>
+      <h2>車での移動時間のめやす</h2>
+      <p>市内の主な拠点は、米子自動車道と国道313号沿いに北から南へ並んでいます。蒜山から北房までは、車でおよそ1時間半です。</p>
+    </div>
+    <ol class="route">
+      <li>
+        <div class="stop"><h3>蒜山高原</h3><span class="ic">蒜山IC</span>
+          <p class="near">蒜山三座・ジャージー牛の牧場・高原の宿</p></div>
+        <span class="leg">米子道・一般道で 約25分</span>
+      </li>
+      <li>
+        <div class="stop"><h3>湯原温泉</h3><span class="ic">湯原IC</span>
+          <p class="near">砂湯・温泉旅館街</p></div>
+        <span class="leg">米子道で 約20分</span>
+      </li>
+      <li>
+        <div class="stop"><h3>久世</h3><span class="ic">久世IC・JR久世駅</span>
+          <p class="near">旧遷喬尋常小学校・久世商店街</p></div>
+        <div class="branch"><strong>西へ寄り道：</strong>勝山町並み保存地区まで 約10分 → 神庭の滝まで さらに約10分 → 美甘の宿場町まで 勝山から約15分</div>
+        <span class="leg">一般道で 約10分</span>
+      </li>
+      <li>
+        <div class="stop"><h3>落合</h3><span class="ic">落合IC・落合JCT・JR美作落合駅</span>
+          <p class="near">高瀬舟羊羹の町・高速道路の分岐点</p></div>
+        <span class="leg">中国道で 約15分</span>
+      </li>
+      <li>
+        <div class="stop"><h3>北房</h3><span class="ic">北房IC</span>
+          <p class="near">ホタルの里・呰部商店街</p></div>
+        <div class="branch"><strong>寄り道：</strong>備中鐘乳穴まで 約15分／醍醐桜まで 約30分（醍醐桜は落合地区ですが、北房ICからが近道）</div>
+      </li>
+    </ol>
+    <p class="note-small">※所要時間は目安です。季節・道路状況・イベント時の渋滞で大きく変わります。冬の蒜山・湯原方面は積雪にご注意ください。</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">Access</span>
+      <h2>真庭市への入り方</h2>
+      <p>どの方面から来るかで、最初に着くエリアが変わります。旅の起点選びの参考にしてください。</p>
+    </div>
+    <div class="access-grid">
+      <div class="access-item">
+        <h3>岡山市方面から</h3>
+        <p>岡山自動車道で北房JCTへ。南の北房・落合が最初の入口です。蒜山までは岡山市中心部から車で約1時間30分が目安。</p>
+      </div>
+      <div class="access-item">
+        <h3>関西方面から</h3>
+        <p>中国自動車道で落合ICまたは落合JCTへ。落合JCTから米子道に入れば、久世・湯原・蒜山へ北上できます。</p>
+      </div>
+      <div class="access-item">
+        <h3>鳥取・米子方面から</h3>
+        <p>米子自動車道を南下すると、最初に着くのが蒜山IC。米子から蒜山高原までは車で約40分が目安です。</p>
+      </div>
+      <div class="access-item">
+        <h3>電車で</h3>
+        <p>JR姫新線の美作落合駅・久世駅・中国勝山駅が玄関口。湯原温泉・蒜山高原へは路線バスがありますが本数が少ないため、事前に時刻をご確認ください。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== アフィリエイト広告（下部・2枠横並び） ===================== -->
+<section class="section alt-cream">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="tag">PR</span>
+      <h2>広告</h2>
+    </div>
+    <div class="ad-row">
+      <!-- アフィリエイト広告9 ここに挿入してください -->
+      <div class="ad-slot">
+        <span class="ad-label">広告</span>
+        <span class="ad-note">【アフィリエイト掲載予定】（アフィリエイト広告枠 9）</span>
+      </div>
+      <!-- アフィリエイト広告10 ここに挿入してください -->
+      <div class="ad-slot">
+        <span class="ad-label">広告</span>
+        <span class="ad-note">【アフィリエイト掲載予定】（アフィリエイト広告枠 10）</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <h4>まにわ往来について</h4>
+        <p>岡山県真庭市の観光地・特産品・祭り・宿泊情報を、個人の視点でまとめた非公式の情報サイトです。掲載内容は公開情報をもとに作成しており、最新情報は各施設・自治体の公式情報をご確認ください。</p>
+      </div>
+      <div>
+        <h4>サイト内リンク</h4>
+        <ul>
+          <li><a href="index.html">トップページ</a></li>
+          <li><a href="map.html">観光マップ</a></li>
+          <li><a href="matsuri.html">祭り・行事</a></li>
+          <li><a href="areas.html">地区紹介（旧町村）</a></li>
+          <li><a href="shukuhaku.html">宿泊施設</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>運営者情報</h4>
+        <p>サイトの運営者情報・連絡先フォームは専用ページに掲載しています。</p>
+        <ul>
+          <li><a href="unei.html">運営者情報・連絡先 &rarr;</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="disclaimer">
+      当サイトはアフィリエイト（広告）を掲載しており、掲載する広告・リンクを経由した商品購入等によって収益を得る場合があります。広告掲載商品の内容、品質、価格、在庫状況、取引条件等については各広告主・販売元の情報をご確認ください。広告のご利用によって生じたいかなる損害・不利益についても、当サイト運営者は一切の責任を負いかねますので、あらかじめご了承ください。また、当サイトに掲載する観光・特産品・施設情報は作成時点のものであり、内容の正確性・最新性を保証するものではありません。情報に誤りが含まれる場合もございますので、あらかじめご容赦いただくとともに、実際のご利用の際は各施設・自治体の公式情報を必ずご確認ください。
+    </div>
+    <div class="disclaimer" style="margin-top:14px;">
+      <strong style="color:#EAF4FA;">プライバシーポリシー</strong><br>
+      当サイトが独自に取得・保存する個人情報はありません。「<a href="unei.html">運営者情報・連絡先</a>」ページのフォームからお送りいただいた内容（メールアドレス・お名前・連絡内容）は、フォーム送信サービス「Formspree」を経由して運営者宛のメールに転送されます。送信の際、IPアドレスやブラウザの種類等の情報がFormspree社によって取得される場合があります。詳細は<a href="https://formspree.io/legal/privacy-policy/" target="_blank" rel="noopener noreferrer">Formspreeのプライバシーポリシー</a>をご確認ください。恐れ入りますが、パスワードやマイナンバーなど機微な情報の送信はお控えください。また、当サイトはWebフォント表示のためGoogle Fonts等の外部サービスに接続しており、その際にアクセス情報が当該サービスに送信される場合があります。加えて、当サイトに掲載するアフィリエイト（広告）のリンクを経由した場合、各広告サービス・提供元によってクッキー等を用いたアクセス情報の取得が行われることがあります。詳細は各サービスが公開するプライバシーポリシーをご確認ください。本ポリシーの内容は、必要に応じて予告なく変更することがあります。
+    </div>
+    <div class="copyright"><span id="copyright-text">© 2026 まにわ往来</span></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var startYear = 2026;
+  var currentYear = new Date().getFullYear();
+  var yearText = currentYear > startYear ? (startYear + '-' + currentYear) : String(startYear);
+  var el = document.getElementById('copyright-text');
+  if (el) { el.textContent = '\u00A9 ' + yearText + ' まにわ往来'; }
+})();
+
+(function(){
+  var SPOTS = {"1": {"name": "蒜山高原・蒜山三座", "area": "蒜山", "cat": ["nature"], "desc": "上蒜山・中蒜山・下蒜山を望む標高500m前後の高原。ジャージー牛の放牧風景が広がり、夏は避暑地、冬はスキー場として賑わいます。ジンギスカンやひるぜん焼そばもこのエリアで。", "access": "米子道 蒜山ICからすぐ", "links": [["index.html#kanko", "観光地の紹介"], ["shukuhaku.html", "蒜山高原の宿"]], "q": "蒜山高原"}, "2": {"name": "湯原温泉「砂湯」", "area": "湯原", "cat": ["onsen"], "desc": "湯原ダムの真下、川底から湧く露天風呂。「西の横綱」と称され、24時間無料で入浴できます。旭川沿いに温泉旅館が並び、オオサンショウウオ（はんざき）の里としても知られます。", "access": "米子道 湯原ICから車で約5分", "links": [["index.html#kanko", "観光地の紹介"], ["shukuhaku.html", "湯原温泉の宿"]], "q": "湯原温泉 砂湯"}, "3": {"name": "美甘の宿場町・美甘渓谷", "area": "美甘", "cat": ["town", "nature"], "desc": "新庄川沿いに約600m続く出雲街道の旧宿場町。白壁の町家と軒下の「つるし手まり」が見どころで、近くには渓谷美の美甘渓谷があります。", "access": "勝山から国道181号を西へ車で約15分", "links": [["areas.html", "地区紹介（美甘）"]], "q": "美甘 宿場町"}, "4": {"name": "神庭の滝", "area": "勝山", "cat": ["nature"], "desc": "「日本の滝百選」に選ばれた高さ110mの名瀑。勝山の町並みから近く、セットで巡りやすい景勝地です。", "access": "JR中国勝山駅から車で約10分", "links": [["index.html#kanko", "観光地の紹介"]], "q": "神庭の滝"}, "5": {"name": "勝山町並み保存地区", "area": "勝山", "cat": ["town", "event"], "desc": "白壁と格子窓、草木染めの「のれん」が続く城下町。御前酒 辻本店もこの通りにあります。春の「お雛まつり」、秋の「喧嘩だんじり」の会場です。", "access": "JR中国勝山駅から徒歩約10分", "links": [["matsuri.html", "お雛まつり・喧嘩だんじり"], ["areas.html", "地区紹介（勝山）"]], "q": "勝山町並み保存地区"}, "6": {"name": "旧遷喬尋常小学校・久世商店街", "area": "久世", "cat": ["town", "event"], "desc": "明治の木造校舎（国の重要文化財）と、レトロな商店街が残る市の中心地。秋の「久世祭り だんじり喧嘩」はこの一帯で行われます。", "access": "JR久世駅から徒歩約10分／米子道 久世ICから車で約5分", "links": [["matsuri.html", "久世祭り"], ["areas.html", "地区紹介（久世）"]], "q": "旧遷喬尋常小学校"}, "7": {"name": "落合（高瀬舟の町）", "area": "落合", "cat": ["town"], "desc": "旭川と備中川が合流する、かつての高瀬舟の発着地。銘菓「高瀬舟羊羹」の町で、今は中国道と米子道が交わる交通の要衝です。", "access": "JR美作落合駅の周辺／中国道 落合ICから車で約5分", "links": [["areas.html", "地区紹介（落合）"]], "q": "美作落合駅"}, "8": {"name": "醍醐桜", "area": "落合", "cat": ["nature", "event"], "desc": "推定樹齢1000年ともいわれる一本桜。見頃は例年3月下旬〜4月上旬で、開花中はライトアップも。落合地区ですが山あいの高台にあり、北房側から向かうほうが近道です。", "access": "中国道 北房ICから車で約30分（落合ICからは約40分）", "links": [["index.html#kanko", "観光地の紹介"]], "q": "醍醐桜"}, "9": {"name": "北房ホタルの里", "area": "北房", "cat": ["nature", "event"], "desc": "備中川沿いに3種のホタルが舞う「日本一のホタルの里」。見頃は6月上旬〜7月上旬です。", "access": "中国道 北房IC周辺の備中川沿い", "links": [["matsuri.html", "ホタル観賞"]], "q": "北房ホタルの里"}, "10": {"name": "呰部商店街（北房ぶり市）", "area": "北房", "cat": ["event"], "desc": "300年以上続く冬の「北房ぶり市」（2月第1日曜日）の会場。山里の商店街に日本海のブリが並びます。", "access": "中国道 北房ICから車ですぐ", "links": [["matsuri.html", "北房ぶり市"]], "q": "呰部商店街"}, "11": {"name": "備中鐘乳穴", "area": "北房", "cat": ["nature"], "desc": "日本最古とされる鍾乳洞。全長約800mのうち約300mが公開され、大石筍「洞内富士」などが見られます。", "access": "中国道 北房ICから約6km", "links": [["index.html#kanko", "観光地の紹介"]], "q": "備中鐘乳穴"}};
+  var CATS = {"nature": "自然・景勝", "onsen": "温泉", "town": "町並み・歴史", "event": "祭り・行事"};
+  var detail = document.getElementById('spot-detail');
+  var pins = document.querySelectorAll('#maniwa-map .pin');
+  var btns = document.querySelectorAll('.spot-btn');
+  var zones = document.querySelectorAll('#maniwa-map .area-zone');
+  var active = {nature:true, onsen:true, town:true, event:true};
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+  function select(id, fromMap){
+    var s = SPOTS[id]; if(!s) return;
+    pins.forEach(function(p){ p.classList.toggle('is-active', p.getAttribute('data-id') === String(id)); });
+    btns.forEach(function(b){ b.classList.toggle('is-active', b.getAttribute('data-id') === String(id)); });
+    zones.forEach(function(z){ z.classList.toggle('is-active', z.getAttribute('data-area') === s.area); });
+    var cats = s.cat.map(function(c){ return '<span class="cat-' + c + '">' + esc(CATS[c]) + '</span>'; }).join('');
+    var links = s.links.map(function(l){ return '<a href="' + esc(l[0]) + '">' + esc(l[1]) + '</a>'; }).join('');
+    var gmap = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(s.q + ' 真庭');
+    links += '<a href="' + gmap + '" target="_blank" rel="noopener noreferrer">Googleマップで開く</a>';
+    detail.classList.remove('is-empty');
+    detail.style.borderLeftColor = getComputedStyle(document.querySelector('.sw.cat-' + s.cat[0])).backgroundColor;
+    detail.innerHTML = '<span class="d-area">' + id + '．' + esc(s.area) + 'エリア</span>'
+      + '<h3>' + esc(s.name) + '</h3>'
+      + '<div class="d-cats">' + cats + '</div>'
+      + '<p>' + esc(s.desc) + '</p>'
+      + '<div class="d-access"><strong>行き方：</strong>' + esc(s.access) + '</div>'
+      + '<div class="d-links">' + links + '</div>';
+    // 説明カードが画面外にあるときだけ、見える位置までスクロール
+    var hd = document.querySelector('.site-header');
+    var off = (hd ? hd.offsetHeight : 0) + 12;
+    var r = detail.getBoundingClientRect();
+    if (r.top < off || r.bottom > window.innerHeight) {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({top: window.pageYOffset + r.top - off, behavior: reduce ? 'auto' : 'smooth'});
+    }
+  }
+
+  pins.forEach(function(p){
+    p.addEventListener('click', function(){ select(p.getAttribute('data-id'), true); });
+    p.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(p.getAttribute('data-id'), true); }
+    });
+  });
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){ select(b.getAttribute('data-id'), false); });
+  });
+
+  function applyFilter(){
+    function visible(el){
+      return el.getAttribute('data-cat').split(' ').some(function(c){ return active[c]; });
+    }
+    pins.forEach(function(p){ p.classList.toggle('is-dim', !visible(p)); });
+    btns.forEach(function(b){ b.classList.toggle('is-dim', !visible(b)); });
+  }
+  document.querySelectorAll('.map-filter button').forEach(function(fb){
+    fb.addEventListener('click', function(){
+      var c = fb.getAttribute('data-filter');
+      active[c] = !active[c];
+      if (!Object.keys(active).some(function(k){ return active[k]; })) {
+        Object.keys(active).forEach(function(k){ active[k] = true; });
+        document.querySelectorAll('.map-filter button').forEach(function(x){ x.setAttribute('aria-pressed','true'); });
+      } else {
+        fb.setAttribute('aria-pressed', active[c] ? 'true' : 'false');
+      }
+      applyFilter();
+    });
+  });
+})();
+</script>
+</body>
+</html>
