@@ -6,9 +6,10 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://leben-k.github.io/maniwa/matsuri.html">
 <title>祭り・行事｜まにわ往来 - 岡山県真庭市 観光情報サイト</title>
-<meta name="description" content="真庭市の四季を彩る祭りと行事をまとめてご紹介。勝山のお雛まつり、北房ホタルの里、北房コスモスまつり、喧嘩だんじり、北房ぶり市など、季節ごとの見どころをイラストとともに解説します。">
+<meta name="description" content="真庭市の四季を彩る祭りと行事をまとめてご紹介。勝山のお雛まつり、北房ホタルの里、喧嘩だんじり、北房ぶり市など、季節ごとの見どころをイラストとともに解説します。">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
+<style>[hidden]{display:none !important;}</style>
 </head>
 <body>
 
@@ -63,13 +64,6 @@
       </div>
 
       <div class="timeline-item">
-        <div class="season">秋（10月中旬）</div>
-        <h3>北房コスモスまつり</h3>
-        <div class="meta">北房地区 北房コスモス広場周辺（北房IC近く）／2026年は10月11日（日）開催予定</div>
-        <p>秋の北房では、北房ICのすぐそばにあるコスモス広場が一面ピンクと白の花に覆われ、備中川沿いにも約5kmにわたる「コスモス街道」が続きます。見頃に合わせて開かれるまつりでは、地元のステージや特産品の販売が行われ、コスモス街道を歩く「コスモスウォーキング」（事前申込制）も同時開催されます。花の見頃は例年10月中旬〜下旬です。</p>
-      </div>
-
-      <div class="timeline-item">
         <div class="season">秋（10月19日・20日ごろ）</div>
         <h3>勝山喧嘩だんじり</h3>
         <div class="meta">勝山地区／高田神社ほか5社の祭礼</div>
@@ -93,37 +87,28 @@
     </div>
 
     <!-- ふるさと納税広告枠：祭り・行事ページ -->
-    <div class="furusato-block">
+    <div class="furusato-block" hidden>
       <span class="furusato-label">ふるさと納税で応援する（真庭市の返礼品）</span>
       <div class="furusato-grid">
-        <!-- ふるさと納税アフィリエイト広告6 ここに挿入 -->
-        <div class="furusato-slot"><span class="slot-title">返礼品広告枠 6</span><span>【アフィリエイト掲載予定】（体験・チケット系の返礼品リンクを挿入予定）</span></div>
-        <!-- ふるさと納税アフィリエイト広告7 ここに挿入 -->
-        <div class="furusato-slot"><span class="slot-title">返礼品広告枠 7</span><span>【アフィリエイト掲載予定】（季節の特産品セットの返礼品リンクを挿入予定）</span></div>
-        <!-- ふるさと納税アフィリエイト広告8 ここに挿入 -->
-        <div class="furusato-slot"><span class="slot-title">返礼品広告枠 8</span><span>【アフィリエイト掲載予定】（お酒・地元グルメの返礼品リンクを挿入予定）</span></div>
+        <!-- ふるさと納税アフィリエイト広告4 ここに挿入 -->
+        <div class="furusato-slot" data-ad-slot="furusato4" hidden><div class="ad-body"></div></div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===================== アフィリエイト広告（下部・2枠横並び） ===================== -->
-<section class="section alt-blush">
+<section class="section alt-blush" hidden>
   <div class="wrap">
     <div class="section-head">
       <span class="tag">PR</span>
       <h2>広告</h2>
     </div>
-    <div class="ad-row">
+    <div class="ad-row" style="grid-template-columns:1fr;">
       <!-- アフィリエイト広告3 ここに挿入してください -->
-      <div class="ad-slot">
+      <div class="ad-slot" data-ad-slot="ad3" hidden>
         <span class="ad-label">広告</span>
-        <span class="ad-note">【アフィリエイト掲載予定】（アフィリエイト広告枠 3）</span>
-      </div>
-      <!-- アフィリエイト広告4 ここに挿入してください -->
-      <div class="ad-slot">
-        <span class="ad-label">広告</span>
-        <span class="ad-note">【アフィリエイト掲載予定】（アフィリエイト広告枠 4）</span>
+        <div class="ad-body"></div>
       </div>
     </div>
   </div>
@@ -174,5 +159,6 @@
   if (el) { el.textContent = '\u00A9 ' + yearText + ' まにわ往来'; }
 })();
 </script>
+<script src="ads.js" defer></script>
 </body>
 </html>
